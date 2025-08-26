@@ -1,0 +1,33 @@
+{
+  "name": "mastering_viem.ts",
+  "version": "1.0.0",
+  "description": "Mastering Viem.ts",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/illiabilishuk/mastering_viem.ts.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/illiabilishuk/mastering_viem.ts/issues"
+  },
+  "homepage": "https://github.com/illiabilishuk/mastering_viem.ts#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "hardhat": "^3.0.1",
+    "node": "^24.6.0"
+  },
+  "type": "module",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@types/node": "^22.17.2",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "typescript": "~5.8.0",
+    "viem": "^2.35.1"
+  }
+}
