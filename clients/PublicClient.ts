@@ -7,7 +7,7 @@
 
 
 // Import methods from Viem.ts
-import { createPublicClient, http, encodeFunctionData } from 'viem';
+import { createPublicClient, http, encodeFunctionData, parseAbi } from 'viem';
 
 // Import variables for placeholding
 import vars from '../vars.js';
@@ -117,7 +117,6 @@ const simulateBlocks = await publicClient.simulateBlocks({
 
 // watchBlockNumber()
 // Watches and returns incoming block numbers
-
 const watchBlockNumber = publicClient.watchBlockNumber({
     onBlockNumber: blockNumber => console.log(blockNumber), // Subscribing on the latest block
     emitMissed: true, // Whether or not to emit missed block numbers to the callback - Optional
@@ -125,3 +124,53 @@ const watchBlockNumber = publicClient.watchBlockNumber({
     poll: true, // Whether or not to use a polling mechanism to check for new block numbers instead of a WebSocket subscription - Optional
     pollingInterval: vars.pollingInterval, // Polling frequency - Optiona;
 });
+
+// call()
+// Executes a new message call immediately without submitting a transaction to the network
+const call = publicClient.call({
+    factory: vars.factory, // Address of a factory contract for the call - Optional
+    factoryData: encodeFunctionData({ // Encoded function data for factory contract - Optional
+        abi: parseAbi(['function anyFunction()']), // Function's ABI
+        functionName: vars.functionName, // Function's name
+        args: [], // Additional arguments
+    }),
+    data: encodeFunctionData({ // Encoded function call data for the main contract 
+        abi: parseAbi(['function anyFunction()']), // Function's ABI
+        functionName: vars.functionName, // Function's name
+    }),
+    to: vars.addressTo, // Address to
+    accessList: [ // List of addresses and storage keys for EIP-2930 access list - Optional
+        {
+            address: `0x${vars.address}`, // Address
+            storageKeys: [`0x${vars.address}`] // Array of addresses
+        }
+    ],
+    blockNumber: vars.blockNumber, // Number of the tested block - Optional
+    blockTag: vars.blockTag, // Tag of the tested block - Optional
+    code: vars.code, // Override the contract code - Optional
+    gas: vars.gas, // Gas limit for the call - Optional
+    gasPrice: vars.gasPrice, // Gas price for legacy code - Optional
+    maxFeePerGas: vars.maxFeePerGas, // Max fee per gas (EIP-1559) - Optional
+    maxPriorityFeePerGas: vars.maxPriorityFeePerGas, // Validator's tip - Optional
+    nonce: vars.nonce, // Assigining a new nonce - Optional
+    stateOverride: vars.stateOverrides, // Overrides for account state during the call (EVM state) - Optional
+    value: vars.value, // Value of transaction
+});
+
+const simulateCalls = publicClient.simulateCalls({
+    calls: [ // Calls simulated in the block
+        {
+            to: `0x${vars.addressTo}`, // Address to
+            value: vars.value, // Value of transaction
+            data: vars.data, // Additional calldata - Optional
+            dataSuffix: vars.dataSuffix, // Data to append to the end of the calldata - Optional
+        },
+    ],
+    account: vars.account,
+    blockNumber: vars.blockNumber,
+    blockTag: vars.blockTag,
+    stateOverrides: vars.stateOverrides,
+    traceAssetChanges: true, 
+    traceTransfers: true,
+    validation: true,
+})
