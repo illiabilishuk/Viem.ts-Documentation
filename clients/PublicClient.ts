@@ -7,7 +7,8 @@
 
 
 // Import methods from Viem.ts
-import { createPublicClient, http, encodeFunctionData, parseAbi } from 'viem';
+import { createPublicClient, http, encodeFunctionData, parseAbi, parseAbiItem, toBlobs, stringToHex } from 'viem';
+import { mainnetTrustedSetupPath } from 'viem/node'
 
 // Import variables for placeholding
 import vars from '../vars.js';
@@ -264,5 +265,199 @@ const getFeeHistory = await publicClient.getFeeHistory({
 const getGasPrice = await publicClient.getGasPrice();
 
 // createBlockFilter()
-// Creates a Filter to listen for new block hashes
+// Creates a filter to listen for new block hashes
 const createBlockFilter = await publicClient.createBlockFilter();
+
+// createEventFilter()
+// Creates a filter to listen for new events
+const createEventFilter = await publicClient.createEventFilter({
+    address: `0x${vars.address}`, // Filter can be scoped to an address - Optional
+    event: parseAbiItem('event Transfer(address indexed from, address indexed to, uint256 value)'), // Filter can be scoped to an event - Optional
+    args: { // A Filter can be scoped to given indexed arguments - Optional
+        from: vars.addressFrom,
+        to: vars.addressTo,
+    },
+    fromBlock: 1n, // From-block range - Optional
+    toBlock: 1n, // To-block range - Optional
+    strict: true, // Strict mode to only return logs that conform to the indexed & non-indexed arguments - Optional
+});
+
+// createPendingTransactionFilter()
+// Creates a filter to listen for new pending transaction hashes
+const createPendingTransactionFilter = await publicClient.createPendingTransactionFilter();
+
+// getFilterChanges()
+// Returns a list of logs or hashes based on a filter since the last time it was called
+const filter = await publicClient.createEventFilter();
+const getFilterChanges = await publicClient.getFilterChanges({ filter });
+
+// getFilterLogs()
+// Returns a list of event logs since the filter was created
+const getFilterLogs = await publicClient.getFilterLogs({ filter });
+
+// getLogs()
+// Returns a list of event logs matching the provided parameters
+const getLogs = await publicClient.getLogs({
+    address: `0x${vars.address}`, // Logs can be scoped to an address - Optional
+    event: parseAbiItem('event Transfer(address indexed from, address indexed to, uint256)'), // Logs can be scoped to an event - Optional
+    args: { // Logs can be scoped to given indexed arguments - Optional
+        from: `0x${vars.addressFrom}`, // Indexed address from - Optional
+        to: `0x${vars.addressTo}`, // Indexed address to - Optional
+    },
+    fromBlock: 1n, // Logs can be scoped to the from-block - Optional
+    toBlock: 1n, // Logs can be scoped to the to-block - Optional
+    strict: true, // Strict mode to only return logs that conform to the indexed & non-indexed arguments - Optional
+});
+
+// watchEvent()
+// Watches and returns emitted event logs
+const watchEvent = publicClient.watchEvent({
+    onLogs: logs => console.log(logs), // The new Event Logs
+    address: `0x${vars.address}`, // The contract address or a list of addresses from which Logs should originate - Optional
+    event: parseAbiItem('event Transfer(address indexed from, address indexed to, uint256)'), // The event in ABI format - Optional
+    args: { // Logs can be scoped to given indexed arguments - Optional
+        from: `0x${vars.addressFrom}`, // Indexed address from - Optional
+        to: `0x${vars.addressTo}`, // Indexed address to - Optional
+    },
+    batch: false, // Whether or not to batch the Event Logs between polling intervals - Optional
+    onError: error => console.log(error), // Error thrown from listening for new event logs - Optional
+    poll: true, // Whether or not to use a polling mechanism to check for new logs - Optional
+    pollingInterval: 1, // Polling frequency - Optional
+    fromBlock: 1n, // The block number to start listening for logs from - Optional
+});
+
+// uninstallFilter()
+// Destroys a filter that was created from one of the following actions:
+/*  
+    createBlockFilter
+    createEventFilter
+    createPendingTransactionFilter
+*/
+const uninstallFilter = await publicClient.uninstallFilter({ filter });
+
+// getProof()
+// Returns the account and storage values of the specified account including the Merkle-proof
+const getProof = await publicClient.getProof({
+    address: `0x${vars.address}`, // Account address
+    storageKeys: [`0x${vars.keys}`], // Array of storage-keys that should be proofed and included
+    blockNumber: 1n, // Proof at a given block number - Optional
+    blockTag: vars.blockTag, // Proof at a given block tag - Optional
+});
+
+// verifyMessage()
+// Verify that a message was signed by the provided address
+const verifyMessage = await publicClient.verifyMessage({
+    address: `0x${vars.address}`, // The Ethereum address that signed the original message
+    message: '', // The message to be verified
+    signature: `0x${vars.signature}`, // The signature that was generated by signing the message with the address's signer
+});
+
+// verifyTypedData()
+// Verify that typed data was signed by the provided address
+const verifyTypedData = await publicClient.verifyTypedData({
+    address: `0x${vars.address}`, // The Ethereum address that signed the original message
+    domain: { // The typed data domain
+        name: '', // Domain's name - Optional
+        version: '1', // Domain's version - Optional
+        chainId: 1, // Domain's chain ID - Optional
+        verifyingContract: `0x${vars.verifyingContract}`, // Domain's verified contract - Optional
+      },
+    types: { // The type definitions for the typed data
+        Person: [ // Typed data type
+          { name: 'name', type: 'string' }, // Typed data type's data
+          { name: 'wallet', type: 'address' }, // Typed data type's data
+        ],
+      },
+    primaryType: 'Person', // Primary type 
+    message: { // Inferred from types
+        from: { // 'From' parameters
+          name: 'vars.name', // 'From' name
+          wallet: `0x${vars.address}`, // 'From' wallet
+        },
+        to: {
+          name: 'vars.name', // 'To' name
+          wallet: `0x${vars.address}`, // 'To' wallet
+        },
+        contents: 'vars.contents', // Message's contents
+      },
+    signature: `0x${vars.signature}`, // The signature of the typed data
+    blockNumber: 1n, // Only used when verifying a typed data that was signed by a Smart Contract Account - Optional
+    blockTag: vars.blockTag, // Only used when verifying a typed data that was signed by a Smart Contract Account - Optional
+});
+
+// prepareTransactionRequest()
+// Prepares a transaction request for signing by populating a nonce, gas limit, fee values, and a transaction type
+// const kzg = setupKzg(cKzg, mainnetTrustedSetupPath) 
+
+const prepareTransactionRequest = await publicClient.prepareTransactionRequest({
+    account: vars.account, // The Account to send the transaction from
+    to: vars.addressTo, // The transaction recipient or contract address
+    accessList: [ // The access list - Optional
+        {
+            address: `0x${vars.address}`, // Account address
+            storageKeys: [`0x${vars.keys}`], // Array of storage-keys that should be proofed and included
+        },
+    ],
+    authorizationList: [], // Signed EIP-7702 Authorization list - Optional
+    // blobs: toBlobs({ data: stringToHex('blobby blob!') }),  // Blobs for blob transactions - Optional
+    chain: sepolia, // The target chain - Optional
+    data: vars.data, // A contract hashed method call with encoded args - Optional
+    // gas: 1n, // The gas limit of the transaction - Optional
+    // gasPrice: 1n, // The price (in wei) to pay per gas - Optional
+    maxFeePerGas: 1n, // Total fee per gas (in wei) - Optional
+    maxPriorityFeePerGas: 1n, // Max priority fee per gas (in wei) - Optional
+    nonce: 1, // Unique number identifying the transaction - Optional
+    nonceManager: vars.nonceManager, // Nonce Manager to consume and increment the Account nonce for the transaction request - Optional
+    parameters: ['fees', 'gas', 'blobVersionedHashes', 'chainId', 'nonce', 'sidecars', 'type'], // Parameters to prepare - Optional
+    value: vars.value, // Value in wei sent with this transaction - Optional
+});
+
+// getTransaction()
+// Returns information about a Transaction given a hash or block identifier
+const getTransaction = await publicClient.getTransaction({
+    // hash: `0x${vars.hash}`, // Get information about a transaction given a transaction hash - Optional
+    // blockHash: `0x${vars.blockHash}`, // Get information about a transaction given a block hash - Optional
+    blockNumber: 1n, // Get information about a transaction given a block number - Optional
+    // blockTag: 'safe', // Get information about a transaction given a block tag - Optional
+    index: 0, // An index to be used with a block identifier - Optional
+});
+
+// getTransactionConfirmations()
+// Returns the number of blocks passed (confirmations) since the transaction was processed on a block
+const getTransactionConfirmations = await publicClient.getTransactionConfirmations({
+    hash: `0x${vars.hash}`, // The hash of the transaction
+});
+
+// getTransactionReceipt()
+// Returns the transaction receipt given a transaction hash
+const getTransactionReceipt = await publicClient.getTransactionReceipt({
+    hash: `0x${vars.hash}`, // // The hash of the transaction
+});
+
+// sendRawTransaction()
+// Sends a signed transaction to the network
+const sendRawTransaction = await publicClient.sendRawTransaction({
+    serializedTransaction: `0x${vars.serializedTransaction}`, // The signed serialized transaction
+});
+
+// waitForTransactionReceipt()
+// Waits for the transaction to be included on a block (one confirmation), and then returns the transaction receipt
+const waitForTransactionReceipt = await publicClient.waitForTransactionReceipt({
+    hash: `0x${vars.hash}`, // The hash of the transaction
+    confirmations: 5, // The number of confirmations (blocks that have passed) to wait before resolving - Optional
+    onReplaced: replacement => console.log(replacement), // Optional callback to emit if the transaction has been replaced - Optional
+    pollingInterval: 1, // Polling frequency (in ms) - Optional
+    retryCount: 1, // Number of times to retry if the transaction or block is not found - Optional
+    retryDelay: 1, // Time to wait (in ms) between retries - Optional
+    timeout: 1, // Optional timeout (in milliseconds) to wait before stopping polling - Optional
+});
+
+// watchPendingTransactions()
+// Watches and returns pending transaction hashes
+const watchPendingTransactions = await publicClient.watchPendingTransactions({
+    onTransactions: hashes => console.log(hashes), // The new pending transaction hashes
+    batch: true, // Whether or not to batch the transaction hashes between polling intervals - Optional
+    onError: error => console.log(error), // Error thrown from listening for new pending transactions - Optional
+    poll: true, // Whether or not to use a polling mechanism to check for new pending transactions - Optional
+    pollingInterval: 1, // Polling frequency (in ms) - Optional
+});
