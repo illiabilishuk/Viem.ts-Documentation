@@ -1,4 +1,4 @@
-# mastering_viem.ts
+# Viem.ts-Documentation
 
 This is a VS Code version of the Viem.ts JS framework documentation.
 
