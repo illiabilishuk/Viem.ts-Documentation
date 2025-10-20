@@ -13,7 +13,7 @@ import { createPublicClient, http, encodeFunctionData, parseAbi } from 'viem';
 import vars from '../vars.js';
 
 // Import a desired chain from the list of Viem.ts chains
-import { mainnet } from 'viem/chains';
+import { mainnet, sepolia } from 'viem/chains';
 
 
 // Create a Public Client
@@ -125,9 +125,22 @@ const watchBlockNumber = publicClient.watchBlockNumber({
     pollingInterval: vars.pollingInterval, // Polling frequency - Optiona;
 });
 
+// watchBlocks()
+// Watches and returns information for incoming blocks
+const watchBlocks = publicClient.watchBlocks({
+    onBlock: block => console.log(block), // The block information
+    onError: error => console.log(error), // Error thrown from getting a block - Optional
+    blockTag: 'safe', // Watch for new blocks on a given tag - Optional
+    emitMissed: true, // Whether or not to emit missed blocks to the callback - Optional
+    emitOnBegin: true, // Whether or not to emit the block to the callback when the subscription opens - Optional
+    includeTransactions: true, // Whether or not to include transactions - Optional
+    poll: true, // Whether or not to use a polling mechanism to check for new blocks instead of a WebSocket subscription - Optional
+    pollingInterval: 10, // Polling frequency - Optional
+});
+
 // call()
 // Executes a new message call immediately without submitting a transaction to the network
-const call = publicClient.call({
+const call = await publicClient.call({
     factory: vars.factory, // Address of a factory contract for the call - Optional
     factoryData: encodeFunctionData({ // Encoded function data for factory contract - Optional
         abi: parseAbi(['function anyFunction()']), // Function's ABI
@@ -157,7 +170,9 @@ const call = publicClient.call({
     value: vars.value, // Value of transaction
 });
 
-const simulateCalls = publicClient.simulateCalls({
+// simulateCalls()
+// Simulates a call. More universal than call()
+const simulateCalls = await publicClient.simulateCalls({
     calls: [ // Calls simulated in the block
         {
             to: `0x${vars.addressTo}`, // Address to
@@ -166,11 +181,88 @@ const simulateCalls = publicClient.simulateCalls({
             dataSuffix: vars.dataSuffix, // Data to append to the end of the calldata - Optional
         },
     ],
-    account: vars.account,
-    blockNumber: vars.blockNumber,
-    blockTag: vars.blockTag,
-    stateOverrides: vars.stateOverrides,
-    traceAssetChanges: true, 
-    traceTransfers: true,
-    validation: true,
-})
+    account: vars.account, // Address that initializes the transaction - Optional
+    blockNumber: vars.blockNumber, // Number of the tested block - Optional
+    blockTag: vars.blockTag, // Tag of the tested block - Optional
+    stateOverrides: vars.stateOverrides, // Overrides for account state during the call (EVM state) - Optional
+    traceAssetChanges: true, // Asset changes tracing - Optional
+    traceTransfers: true, // Token transfers tracing - Optional
+    validation: true, // Contract validation - Optional
+});
+
+// getChainId()
+// Returns a blockchain network identifier
+const getChainId = await publicClient.getChainId();
+
+// getEip712Domain()
+// Helps prevent 'replay-attacks'
+const getEip712Domain = await publicClient.getEip712Domain({
+    address: `0x${vars.address}`, // Contract address
+    factory: vars.factoryAddress, // Specifies the address of the factory that provided the contract - Optional
+    factoryData: encodeFunctionData( // Factory data - Optional
+        {
+            abi: [vars.factoryAbi], // Factory ABI - Optional
+            functionName: vars.functionName, // Function name in the contract - Optional
+            args: [] // Additional arguments - Optional
+        }
+    )
+});
+
+// estimateFeesPerGas
+// Returns an estimate for the fees per gas
+const estimateFeesPerGas = await publicClient.estimateFeesPerGas({
+    type: 'legacy', // Chain type - Optional
+});
+
+// estimateGas
+// Estimates the gas necessary to complete a transaction without submitting it to the network
+const estimateGas = await publicClient.estimateGas({
+    account: vars.account, // The Account to estimate gas from
+    data: vars.data, // Contract code or a hashed method call - Optional
+    gasPrice: vars.gasPrice, // The price (in wei) to pay per gas - Optional
+    maxFeePerGas: vars.maxFeePerGas, // Total fee per gas - Optional
+    maxPriorityFeePerGas: vars.maxPriorityFeePerGas, // Max priority fee per gas - Optional
+    to: vars.to, // Transaction recipient - Optional
+    value: vars.value, // Value (in wei) sent with this transaction - Optional
+    blockNumber: vars.blockNumber, // The block number to perform the gas estimate against - Optional
+    blockTag: vars.blockTag, // The block tag to perform the gas estimate against - Optional
+    stateOverride: [ // Contract's artificial emulation of the change of its data - Optional
+        {
+            address: `0x${vars.address}`, // Changed address
+            balance: vars.balance, // Address's balance - Optional
+            stateDiff: [ // Refreshes chosen contract's slots - Optional
+                {
+                    slot: `0x${vars.slot}`, // Slot to be changed
+                    value: `0x${vars.value}`, // Value to be assigned
+                }
+            ],
+        },
+    ],
+});
+
+// estimateMaxPriorityFeePerGas()
+// Returns an estimate for the max priority fee per gas (in wei) for a transaction to be likely included in the next block
+const estimateMaxPriorityFeePerGas = await publicClient.estimateMaxPriorityFeePerGas({
+    chain: sepolia, // Type of chain - Optional 
+});
+
+// getBlobBaseFee()
+// Returns the current blob base fee (in wei)
+const getBlobBaseFee = await publicClient.getBlobBaseFee();
+
+// getFeeHistory()
+// Returns a collection of historical gas information
+const getFeeHistory = await publicClient.getFeeHistory({
+    blockCount: 1, // Number of blocks in the requested range
+    rewardPercentiles: [25, 75], // A monotonically increasing list of percentile values
+    blockNumber: 1n, // Highest number block of the requested range - Optional
+    blockTag: vars.blockTag, // Highest number block of the requested range - Optional
+});
+
+// getGasPrice()
+// Returns the current price of gas (in wei)
+const getGasPrice = await publicClient.getGasPrice();
+
+// createBlockFilter()
+// Creates a Filter to listen for new block hashes
+const createBlockFilter = await publicClient.createBlockFilter();

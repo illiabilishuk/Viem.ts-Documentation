@@ -1,11 +1,12 @@
-let account;
 let abi;
+let account;
 let address;
 let addressFrom;
 let addressTo;
 let args;
 let balance;
 let baseFeePerGas;
+let blockCount;
 let blockHash;
 let blockNumber;
 let blockOverrides;
@@ -15,6 +16,8 @@ let code;
 let data;
 let dataSuffix;
 let factory;
+let factoryAbi;
+let factoryAddress;
 let functionName;
 let gas;
 let gasLimit;
@@ -26,6 +29,7 @@ let number;
 let nonce;
 let owner;
 let pollingInterval;
+let slot;
 let stateDiff;
 let stateOverrides;
 let timestamp;
@@ -33,14 +37,15 @@ let to;
 let value;
 
 const vars = {
-    account,
     abi,
+    account,
     address,
     addressFrom,
     addressTo,
     args,
     balance,
     baseFeePerGas,
+    blockCount,
     blockHash,
     blockNumber,
     blockOverrides,
@@ -50,6 +55,8 @@ const vars = {
     data,
     dataSuffix,
     factory,
+    factoryAbi,
+    factoryAddress,
     functionName,
     gas,
     gasLimit,
@@ -61,6 +68,7 @@ const vars = {
     nonce,
     owner,
     pollingInterval,
+    slot,
     stateDiff,
     stateOverrides,
     timestamp,
